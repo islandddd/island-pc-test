@@ -1,0 +1,63 @@
+﻿
+
+Name        : wuauserv
+DisplayName : Windows 更新
+Status      : Stopped
+StartType   : Manual
+
+
+
+
+
+Name        : UsoSvc
+DisplayName : 更新 Orchestrator 服务
+Status      : Running
+StartType   : Manual
+
+
+
+
+
+Name        : BITS
+DisplayName : Background Intelligent Transfer Service
+Status      : Running
+StartType   : Automatic
+
+
+
+
+
+Name        : WaaSMedicSvc
+DisplayName : WaaSMedicSvc
+Status      : Stopped
+StartType   : Manual
+
+
+
+
+
+Name        : WinDefend
+DisplayName : Microsoft Defender 防病毒服务
+Status      : Running
+StartType   : Automatic
+
+
+
+
+
+Name        : mpssvc
+DisplayName : Windows Defender Firewall
+Status      : Running
+StartType   : Automatic
+
+
+
+
+
+Name        : SecurityHealthService
+DisplayName : Windows 安全中心服务
+Status      : Running
+StartType   : Manual
+
+
+
