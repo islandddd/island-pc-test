@@ -32,8 +32,3 @@
 - 问问题时要告诉用户具体怎么做，不能只问不教
 - 回复语言要适合技术小白，不能用专业术语
 
-## 模型配置切换
-- 日常模式：`oh-my-opencode-slim.json`（全部 deepseek-chat，免费）
-- 强模式备份：`oh-my-opencode-slim.strong.json`（orchestrator v4-pro + variant medium，付费）
-- 说"切回强配置"→ 用 strong.json 覆盖 slim.json + 重启 opencode
-- 说"切回日常模式"→ 恢复 slim.json 内容 + 重启 opencode
