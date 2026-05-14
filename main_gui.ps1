@@ -327,7 +327,7 @@ function Confirm-HuorongClosed {
 
     $warnForm = New-Object System.Windows.Forms.Form
     $warnForm.TopMost = $true
-    $warnMsg = "仍检测到火绒在运行。`n`n点「继续」直接运行（火绒可能拦截部分操作），点「退出」取消。"
+    $warnMsg = "仍检测到火绒在运行。`n`n点击「是」继续（忽视火绒），点击「否」退出。"
     $warnResult = [System.Windows.Forms.MessageBox]::Show($warnForm, $warnMsg, "火绒仍在运行 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
     $warnForm.Dispose()
 
