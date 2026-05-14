@@ -133,14 +133,8 @@ function Test-Admin {
 function Test-SoftwareInstalled {
     param([string]$InstallerFileName)
     
-    # 从文件名提取关键词
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($InstallerFileName)
-    # 移除常见安装包后缀词
-    $cleanName = $baseName -replace '(?i)(setup|install|installer|x86|x64|v?\d+[\d.]*|full|latest|release|stable|beta|alpha|official|web|online|offline|portable)', ''
-    $cleanName = $cleanName -replace '[_\-\s.]+$', ''
-    $cleanName = $cleanName -replace '^[_\-\s.]+', ''
-    
-    if ($cleanName.Length -lt 3) { $cleanName = $baseName }
+    $keywords = $baseName -split '[_\-\s.]+' | Where-Object { $_.Length -ge 3 } | Select-Object -Unique
     
     $uninstallPaths = @(
         "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
@@ -148,23 +142,16 @@ function Test-SoftwareInstalled {
         "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
     )
     
-    $keywords = $cleanName -split '[ _\-\.]+' | Where-Object { $_.Length -ge 2 } | Select-Object -Unique
-    
     foreach ($uninstallPath in $uninstallPaths) {
         try {
             $items = Get-ItemProperty -Path $uninstallPath -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName }
             foreach ($item in $items) {
                 $displayName = $item.DisplayName
                 foreach ($kw in $keywords) {
-                    if ($kw.Length -ge 3 -and $displayName -match $kw) {
-                        Write-Log "检测到已安装: $displayName (匹配关键词: $kw)" "Gray"
+                    if ($displayName -like "*$kw*") {
+                        Write-Log "检测到已安装: $displayName (匹配: $kw)" "Gray"
                         return $true
                     }
-                }
-                # 反向匹配：安装包名包含在已安装程序名中
-                if ($keywords.Count -eq 1 -and $keywords[0].Length -ge 4 -and $displayName -match [regex]::Escape($keywords[0])) {
-                    Write-Log "检测到已安装: $displayName" "Gray"
-                    return $true
                 }
             }
         } catch { }
@@ -292,7 +279,15 @@ if ($installers.Count -eq 0) {
             Write-Log "  [$methodIndex/$totalMethods] 尝试: $($method.Name)" "Gray"
             
             try {
-                $proc = Start-Process -FilePath $method.Exe -ArgumentList $method.Args -Wait -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
+                $proc = Start-Process -FilePath $method.Exe -ArgumentList $method.Args -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
+                if ($proc) {
+                    $proc.WaitForExit(120000)
+                    if (-not $proc.HasExited) {
+                        try { $proc.Kill() } catch {}
+                        Write-Log "  安装超时 (120秒)，已终止" "Yellow"
+                        continue
+                    }
+                }
                 
                 # 防自动重启：每次安装后立即取消任何待定的系统重启
                 shutdown /a 2>$null
@@ -357,10 +352,11 @@ if ($installers.Count -eq 0) {
                 [System.Windows.Forms.MessageBox]::Show($topForm, "软件: $($installer.Name)`n`n所有自动安装均未成功。`n安装程序会正常打开，请手动点击「下一步」完成安装。`n`n完成后点击「确定」继续。", "手动安装 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
                 $topForm.Dispose()
                 if ($installer.Extension -eq ".msi") {
-                    $proc = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$($installer.FullName)`" /norestart" -Wait -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
+                    $proc = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$($installer.FullName)`" /norestart" -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
                 } else {
-                    $proc = Start-Process -FilePath $installer.FullName -Wait -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
+                    $proc = Start-Process -FilePath $installer.FullName -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
                 }
+                if ($proc) { $proc.WaitForExit(300000); if (-not $proc.HasExited) { try { $proc.Kill() } catch {} } }
                 shutdown /a 2>$null
                 if ($proc -and ($proc.ExitCode -eq 0 -or $proc.ExitCode -eq 3010)) {
                     Write-Log "手动安装完成!" "Green"

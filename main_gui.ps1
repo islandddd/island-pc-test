@@ -183,6 +183,15 @@ $statusPanel.Controls.Add($statusLabel)
 $statusPanel.Controls.Add($taskLabel)
 $statusPanel.Controls.Add($logPathLabel)
 
+$lblPopupHint = New-Object System.Windows.Forms.Label
+$lblPopupHint.Text = "⚠ 请注意电脑屏幕上的弹窗并确认"
+$lblPopupHint.Location = New-Object System.Drawing.Point([math]::Round(108 * $scale), [math]::Round(62 * $scale))
+$lblPopupHint.Size = New-Object System.Drawing.Size([math]::Round(600 * $scale), [math]::Round(10 * $scale))
+$lblPopupHint.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(9 * $scale), [System.Drawing.FontStyle]::Bold)
+$lblPopupHint.ForeColor = [System.Drawing.Color]::FromArgb(220, 40, 40)
+$lblPopupHint.Visible = $false
+$statusPanel.Controls.Add($lblPopupHint)
+
 # ===== 操作区域 =====
 $actionPanel = New-Object System.Windows.Forms.Panel
 $actionPanel.Location = New-Object System.Drawing.Point([math]::Round(18 * $scale), [math]::Round(194 * $scale))
@@ -269,6 +278,7 @@ function Set-Running($run) {
     $script:running = $run
     foreach ($btn in $script:allButtons) { $btn.Enabled = -not $run }
     $progress.Visible = $run
+    $lblPopupHint.Visible = $run
     if ($run) {
         $statusPill.Text = "运行中"
         $statusPill.BackColor = [System.Drawing.Color]::FromArgb(30, 105, 190)
