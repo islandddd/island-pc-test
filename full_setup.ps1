@@ -160,10 +160,11 @@ function Test-SoftwareInstalled {
 }
 
 function Show-HiSuitePopup {
-    Add-Type -AssemblyName System.Windows.Forms, System.Drawing -ErrorAction Stop
+    if (-not ([System.Windows.Forms.Form] -eq $null)) { } else { Add-Type -AssemblyName System.Windows.Forms, System.Drawing -ErrorAction Stop }
+    try { $dpiGraphics = [System.Drawing.Graphics]::FromHwnd([IntPtr]::Zero); $scale = [math]::Max($dpiGraphics.DpiX, $dpiGraphics.DpiY) / 96.0; $dpiGraphics.Dispose() } catch { $scale = 1.0 }
     $form = New-Object System.Windows.Forms.Form
     $form.Text = "手机助手安装完成 --龙信硬件组"
-    $form.Size = New-Object System.Drawing.Size(520, 280)
+    $form.Size = New-Object System.Drawing.Size([math]::Round(520 * $scale), [math]::Round(360 * $scale))
     $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
     $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
     $form.MaximizeBox = $false
@@ -174,26 +175,26 @@ function Show-HiSuitePopup {
     $form.Show(); $form.Hide()
 
     $title = New-Object System.Windows.Forms.Label
-    $title.Text = "⚠ 请关闭设备连接自动启动"
-    $title.Font = New-Object System.Drawing.Font("Microsoft YaHei", 18, [System.Drawing.FontStyle]::Bold)
+    $title.Text = "? 请关闭设备连接自动启动"
+    $title.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(18 * $scale), [System.Drawing.FontStyle]::Bold)
     $title.ForeColor = [System.Drawing.Color]::FromArgb(200, 40, 40)
-    $title.Size = New-Object System.Drawing.Size(480, 40)
-    $title.Location = New-Object System.Drawing.Point(20, 20)
+    $title.Size = New-Object System.Drawing.Size([math]::Round(480 * $scale), [math]::Round(40 * $scale))
+    $title.Location = New-Object System.Drawing.Point([math]::Round(20 * $scale), [math]::Round(20 * $scale))
     $title.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
     $form.Controls.Add($title)
 
     $body = New-Object System.Windows.Forms.Label
     $body.Text = "华为/荣耀手机助手已安装成功`n`n请手动关闭设备连接自动启动：`n`n  1. 打开手机助手`n  2. 点击「设置」`n  3. 取消勾选「设备连接时自动启动」`n  4. 点击「确定」保存"
-    $body.Font = New-Object System.Drawing.Font("Microsoft YaHei", 11)
-    $body.Size = New-Object System.Drawing.Size(470, 150)
-    $body.Location = New-Object System.Drawing.Point(25, 70)
+    $body.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(11 * $scale))
+    $body.Size = New-Object System.Drawing.Size([math]::Round(470 * $scale), [math]::Round(190 * $scale))
+    $body.Location = New-Object System.Drawing.Point([math]::Round(25 * $scale), [math]::Round(75 * $scale))
     $form.Controls.Add($body)
 
     $btn = New-Object System.Windows.Forms.Button
     $btn.Text = "我知道了"
-    $btn.Font = New-Object System.Drawing.Font("Microsoft YaHei", 12, [System.Drawing.FontStyle]::Bold)
-    $btn.Size = New-Object System.Drawing.Size(160, 42)
-    $btn.Location = New-Object System.Drawing.Point(180, 190)
+    $btn.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(12 * $scale), [System.Drawing.FontStyle]::Bold)
+    $btn.Size = New-Object System.Drawing.Size([math]::Round(160 * $scale), [math]::Round(42 * $scale))
+    $btn.Location = New-Object System.Drawing.Point([math]::Round(180 * $scale), [math]::Round(275 * $scale))
     $btn.BackColor = [System.Drawing.Color]::FromArgb(30, 105, 190)
     $btn.ForeColor = [System.Drawing.Color]::White
     $btn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
