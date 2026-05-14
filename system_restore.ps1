@@ -675,38 +675,62 @@ if ($canUninstall) {
                 $uninstCmd = $app.Uninstall
                 $proc = $null
                 $success = $false
+                $exe = $null
+                $existingArgs = ""
                 
                 if ($uninstCmd -match 'msiexec') {
-                    $args = $uninstCmd -replace '.*msiexec\.exe\s*', ''
-                    $proc = Start-Process msiexec -ArgumentList "$args /quiet /norestart" -PassThru -WindowStyle Hidden -ErrorAction SilentlyContinue
+                    $existingArgs = $uninstCmd -replace '.*msiexec\.exe\s*', ''
+                    $exe = "msiexec.exe"
+                    $proc = Start-Process msiexec -ArgumentList "$existingArgs /quiet /norestart" -PassThru -WindowStyle Hidden -ErrorAction SilentlyContinue
                     if ($proc) { $proc.WaitForExit(120000); if (-not $proc.HasExited) { try { $proc.Kill() } catch {} } }
                     if ($proc -and $proc.ExitCode -eq 0) { $success = $true }
-                    elseif ($proc) { Write-Log "  卸载失败 (exit: $($proc.ExitCode))" "Red" }
+                    elseif ($proc) { Write-Log "  静默卸载失败 (exit: $($proc.ExitCode))" "Red" }
                     
                 } elseif ($uninstCmd -match '^\s*"([^"]+)"\s*(.*)') {
                     $exe = $Matches[1]
                     $existingArgs = $Matches[2].Trim()
-                    $uninstallArgs = if ($existingArgs) { $existingArgs } else { "/S" }
                     if (Test-Path $exe) {
-                        $proc = Start-Process -FilePath $exe -ArgumentList $uninstallArgs -PassThru -WindowStyle Hidden -ErrorAction SilentlyContinue
-                        if ($proc) { $proc.WaitForExit(120000); if (-not $proc.HasExited) { try { $proc.Kill() } catch {} } }
-                        if ($proc -and $proc.ExitCode -eq 0) { $success = $true }
-                        elseif ($proc) { Write-Log "  卸载失败 (exit: $($proc.ExitCode))" "Red" }
-                    } else {
-                        Write-Log "  卸载程序不存在: $exe" "Red"
-                    }
-                    
-                } elseif ($uninstCmd -match '\.exe') {
-                    $exe = $uninstCmd -replace '\s.*$', ''
-                    if (Test-Path $exe) {
-                        $existingArgs = ($uninstCmd -replace [regex]::Escape($exe), '' -replace '^\s+', '').Trim()
                         $uninstallArgs = if ($existingArgs) { $existingArgs } else { "/S" }
                         $proc = Start-Process -FilePath $exe -ArgumentList $uninstallArgs -PassThru -WindowStyle Hidden -ErrorAction SilentlyContinue
                         if ($proc) { $proc.WaitForExit(120000); if (-not $proc.HasExited) { try { $proc.Kill() } catch {} } }
                         if ($proc -and $proc.ExitCode -eq 0) { $success = $true }
-                        elseif ($proc) { Write-Log "  卸载失败 (exit: $($proc.ExitCode))" "Red" }
+                        elseif ($proc) { Write-Log "  静默卸载失败 (exit: $($proc.ExitCode))" "Red" }
                     } else {
-                        Write-Log "  卸载程序不存在: $exe" "Red"
+                        Write-Log "  卸载程序不存在: $exe" "Red"; $exe = $null
+                    }
+                    
+                } elseif ($uninstCmd -match '^([a-zA-Z]:\\.*?\.exe)\s*(.*)') {
+                    $exe = $Matches[1]
+                    $existingArgs = $Matches[2].Trim()
+                    if (Test-Path $exe) {
+                        $uninstallArgs = if ($existingArgs) { $existingArgs } else { "/S" }
+                        $proc = Start-Process -FilePath $exe -ArgumentList $uninstallArgs -PassThru -WindowStyle Hidden -ErrorAction SilentlyContinue
+                        if ($proc) { $proc.WaitForExit(120000); if (-not $proc.HasExited) { try { $proc.Kill() } catch {} } }
+                        if ($proc -and $proc.ExitCode -eq 0) { $success = $true }
+                        elseif ($proc) { Write-Log "  静默卸载失败 (exit: $($proc.ExitCode))" "Red" }
+                    } else {
+                        Write-Log "  卸载程序不存在: $exe" "Red"; $exe = $null
+                    }
+                }
+                
+                # 静默卸载失败 -> 弹窗引导手动卸载
+                if (-not $success -and $exe -and (Test-Path $exe)) {
+                    try {
+                        Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+                        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
+                        [System.Windows.Forms.MessageBox]::Show($topForm, "自动卸载 $($app.Name) 未成功。`n`n卸载程序会正常打开，请手动点击「下一步」完成卸载。`n`n完成后点击「确定」继续。", "手动卸载 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $topForm.Dispose()
+                        if ($exe -eq "msiexec.exe") {
+                            $proc = Start-Process msiexec -ArgumentList "$existingArgs /norestart" -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
+                        } else {
+                            $manualArgs = if ($existingArgs) { $existingArgs } else { "" }
+                            $proc = Start-Process -FilePath $exe -ArgumentList $manualArgs -PassThru -WindowStyle Normal -ErrorAction SilentlyContinue
+                        }
+                        if ($proc) { $proc.WaitForExit(300000); if (-not $proc.HasExited) { try { $proc.Kill() } catch {} } }
+                        if ($proc -and $proc.ExitCode -eq 0) { $success = $true }
+                        elseif ($proc) { Write-Log "  手动卸载也失败 (exit: $($proc.ExitCode))" "Red" }
+                    } catch {
+                        Write-Log "  手动卸载弹窗失败: $_" "Red"
                     }
                 }
                 
