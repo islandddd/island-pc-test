@@ -159,27 +159,6 @@ function Test-SoftwareInstalled {
     return $false
 }
 
-function Disable-HiSuiteAutoStart {
-    $paths = @(
-        "$env:LOCALAPPDATA\HiSuite\userdata\Setting.ini",
-        "$env:LOCALAPPDATA\HonorSuite\userdata\Setting.ini"
-    )
-    $names = @("华为手机助手 HiSuite", "荣耀手机助手 HonorSuite")
-    for ($i = 0; $i -lt $paths.Count; $i++) {
-        $p = $paths[$i]
-        if (Test-Path $p) {
-            $content = Get-Content $p -Encoding UTF8
-            if ($content -match 'autolaunch=1') {
-                $content = $content -replace 'autolaunch=1', 'autolaunch=0'
-                Set-Content $p -Value $content -Encoding UTF8
-                Write-Log "$($names[$i]) 设备连接自动启动已关闭" "Green"
-            } else {
-                Write-Log "$($names[$i]) 自动启动已是关闭状态" "Gray"
-            }
-        }
-    }
-}
-
 #region Auto-elevate
 if (-not (Test-Admin)) {
     Write-Host "需要管理员权限，正在重新启动..." -ForegroundColor Yellow
@@ -359,9 +338,6 @@ if ($installers.Count -eq 0) {
                             else { Write-Log "MCR3512 注册表导入失败 (exit: $LASTEXITCODE)" "Red" }
                         }
                     }
-                    if ($installer.Name -match '(?i)HiSuite|HonorSuite') {
-                        Disable-HiSuiteAutoStart
-                    }
                     break
                 }
                 
@@ -416,9 +392,6 @@ if ($installers.Count -eq 0) {
                             if ($LASTEXITCODE -eq 0) { Write-Log "MCR3512 注册表导入完成" "Green" }
                             else { Write-Log "MCR3512 注册表导入失败 (exit: $LASTEXITCODE)" "Red" }
                         }
-                    }
-                    if ($installer.Name -match '(?i)HiSuite|HonorSuite') {
-                        Disable-HiSuiteAutoStart
                     }
                 } else {
                     $exitText = if ($proc) { $proc.ExitCode } else { "未启动" }
