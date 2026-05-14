@@ -1,0 +1,11 @@
+# Software installers — keep folder only
+software/**
+!software/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# Windows junk
+Thumbs.db
+Desktop.ini
