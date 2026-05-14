@@ -600,6 +600,7 @@ if ($canUninstall) {
         $sf.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
         $sf.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
         $sf.TopMost = $true
+        $sf.Show(); $sf.Hide()
 
         $lbl = New-Object System.Windows.Forms.Label
         $lbl.Text = "系统已还原。请勾选需要额外卸载的软件（默认全不选）："

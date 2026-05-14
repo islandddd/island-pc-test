@@ -624,8 +624,8 @@ function Show-SoftwareSelection {
     $clb.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(11 * $scale))
     $clb.ItemHeight = [math]::Round(22 * $scale)
     $clb.CheckOnClick = $true
-    $clb.BackColor = [System.Drawing.Color]::FromArgb(35, 35, 38)
-    $clb.ForeColor = $colorText
+    $clb.BackColor = [System.Drawing.Color]::White
+    $clb.ForeColor = [System.Drawing.Color]::Black
     $sf.Controls.Add($clb)
     
     $scriptNames = @("system_setup.ps1","full_setup.ps1","system_restore.ps1","main_gui.ps1")
