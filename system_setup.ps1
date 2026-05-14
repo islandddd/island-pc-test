@@ -196,7 +196,7 @@ if ($blockerFound.Count -gt 0) {
             } else {
                 $popupMsg += "请先暂时退出这些软件后再继续。`n`n完成后点击「我已关闭防护」继续。"
             }
-            $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true
+            $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
             $result = [System.Windows.Forms.MessageBox]::Show($topForm, $popupMsg, "安全软件警告 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Warning)
             $topForm.Dispose()
             if ($result -eq [System.Windows.Forms.DialogResult]::No) {
@@ -217,7 +217,7 @@ if ($blockerFound.Count -gt 0) {
             if ($stillBlocking.Count -gt 0) {
                 $stillNames = $stillBlocking -join "、"
                 Write-Log "检测到以下安全软件仍在运行: $stillNames，继续循环确认" "Yellow"
-                $retryForm = New-Object System.Windows.Forms.Form; $retryForm.TopMost = $true
+                $retryForm = New-Object System.Windows.Forms.Form; $retryForm.TopMost = $true; $retryForm.Show(); $retryForm.Hide()
                 $retryResult = [System.Windows.Forms.MessageBox]::Show($retryForm, "以下安全软件仍在运行：`n`n  $stillNames`n`n请按照上面的步骤关闭防护后再点「重试」。`n`n点「取消」可退出脚本。", "安全软件仍在运行 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::RetryCancel, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
                 $retryForm.Dispose()
                 if ($retryResult -eq [System.Windows.Forms.DialogResult]::Cancel) {
@@ -432,7 +432,7 @@ try {
 try {
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
     $msg = "是否将电源/睡眠按钮功能都设为【关机】？`n`n（选'是'→电源/睡眠按钮全设关机）`n（选'否'→不修改按钮，仅设置永不息屏）"
-    $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true
+    $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
     $dlgResult = [System.Windows.Forms.MessageBox]::Show($topForm, $msg, "电源按钮设置 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Question)
     $topForm.Dispose()
     # 选"是"→要设关机(台式机行为), 选"否"→不修改(笔记本行为)
@@ -723,7 +723,7 @@ if ($failedSettings.Count -gt 0) {
         if (-not $tamperOn) { $popupMsg += "`n  3. Windows 安全中心篡改防护未关" }
         if ($hrActive) { $popupMsg += "`n`n  ** 火绒安全已运行，部分设置可能由其接管 **" }
         $popupMsg += "`n`n选择: 是 = 继续执行，否 = 退出脚本"
-        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true
+        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
         $result = [System.Windows.Forms.MessageBox]::Show($topForm, $popupMsg, "安全设置验证 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Warning)
         $topForm.Dispose()
         if ($result -eq [System.Windows.Forms.DialogResult]::No) {
@@ -829,7 +829,7 @@ if ($taskbarClosed) {
         $infoMsg += "        启用【禁用Windows资讯和兴趣】`n`n"
         $infoMsg += "  Win11：右键任务栏 → 任务栏设置 → 小组件 → 关闭`n`n"
         $infoMsg += '操作完成后点击「确定」继续。'
-        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true
+        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
         [System.Windows.Forms.MessageBox]::Show($topForm, $infoMsg, "关闭任务栏资讯 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
         $topForm.Dispose()
         Write-Log "用户确认已手动完成操作" "Green"
@@ -891,35 +891,9 @@ if (Test-Path $infPath) {
 }
 
 # ============================================================
-# 9. 自动安装 MCR3512 智能控制键（exe + reg）
+# 9. Windows 激活状态检测
 # ============================================================
-Write-Step "9. MCR3512 控制键安装"
-$mcrFolder = Get-ChildItem -Path "$scriptDir\software" -Directory -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match '(?i)MCR3512|诺为|诺咪雅|控制键' } |
-    Select-Object -First 1
-if ($mcrFolder) {
-    Write-Log "找到 MCR3512 安装目录: $($mcrFolder.Name)" "Cyan"
-    $exeFile = Get-ChildItem -Path $mcrFolder.FullName -Filter "*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-    $regFile = Get-ChildItem -Path $mcrFolder.FullName -Filter "*.reg" -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($exeFile) {
-        Write-Log "正在安装控制键程序: $($exeFile.Name)，请稍候..." "Cyan"
-        Start-Process -FilePath $exeFile.FullName -ArgumentList "/S" -Wait -WindowStyle Hidden -ErrorAction SilentlyContinue
-        Write-Log "控制键程序安装完成" "Green"
-    }
-    if ($regFile) {
-        Write-Log "正在导入注册表: $($regFile.Name) ..." "Cyan"
-        regedit.exe /s "$($regFile.FullName)"
-        if ($LASTEXITCODE -eq 0) { Write-Log "注册表导入完成" "Green" }
-        else { Write-Log "注册表导入失败" "Red" }
-    }
-} else {
-    Write-Log "未找到 MCR3512 安装目录，跳过" "Yellow"
-}
-
-# ============================================================
-# 10. Windows 激活状态检测
-# ============================================================
-Write-Step "10. Windows 激活状态检测"
+Write-Step "9. Windows 激活状态检测"
 
 $activated = $false
 

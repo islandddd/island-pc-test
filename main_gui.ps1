@@ -308,6 +308,7 @@ function Confirm-HuorongClosed {
     $msg += "完成后点击「我已关闭」。`n如不了解怎么操作可点「忽略继续」。"
     $topForm = New-Object System.Windows.Forms.Form
     $topForm.TopMost = $true
+    $topForm.Show(); $topForm.Hide()
     $result = [System.Windows.Forms.MessageBox]::Show($topForm, $msg, "火绒安全提示 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNoCancel, [System.Windows.Forms.MessageBoxIcon]::Warning)
     $topForm.Dispose()
 
@@ -327,6 +328,7 @@ function Confirm-HuorongClosed {
 
     $warnForm = New-Object System.Windows.Forms.Form
     $warnForm.TopMost = $true
+    $warnForm.Show(); $warnForm.Hide()
     $warnMsg = "仍检测到火绒在运行。`n`n点击「是」继续（忽视火绒），点击「否」退出。"
     $warnResult = [System.Windows.Forms.MessageBox]::Show($warnForm, $warnMsg, "火绒仍在运行 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
     $warnForm.Dispose()
@@ -487,7 +489,9 @@ function Export-IssueReport {
         [System.IO.File]::WriteAllText($txtPath, ($lines -join "`r`n"), [System.Text.Encoding]::UTF8)
 
         Append-Output "[OK] 问题报告已生成: $txtPath" ([System.Drawing.Color]::FromArgb(80, 220, 80))
-        [System.Windows.Forms.MessageBox]::Show("问题报告已生成：`n`n$txtPath`n`n把这个 .txt 文件发给 AI 分析即可。", "导出完成 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null
+        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
+        [System.Windows.Forms.MessageBox]::Show($topForm, "问题报告已生成：`n`n$txtPath`n`n把这个 .txt 文件发给 AI 分析即可。", "导出完成 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null
+        $topForm.Dispose()
         $statusLabel.Text = "问题报告已导出。"
         $taskLabel.Text = "当前任务：已完成"
     } catch {
@@ -628,7 +632,7 @@ function Show-SoftwareSelection {
     $imgNames = @("wallpaper.jpg","wallpaper.jpeg","wallpaper.png","wallpaper.bmp","lockscreen.jpg","lockscreen.jpeg","lockscreen.png","lockscreen.bmp")
     $softwareDir = Join-Path $scriptDir "software"
     if (Test-Path $softwareDir) {
-        $found = @(Get-ChildItem -Path "$softwareDir\*" -Include "*.exe","*.msi" -ErrorAction SilentlyContinue |
+        $found = @(Get-ChildItem -Path "$softwareDir\*" -Include "*.exe","*.msi" -Recurse -ErrorAction SilentlyContinue |
             Where-Object { -not ($scriptNames -contains $_.Name) -and -not ($imgNames -contains $_.Name) } |
             Sort-Object Name)
     } else {
@@ -769,7 +773,9 @@ function Start-NetworkMapping {
     $icon = if ($failCount -eq 0) { [System.Windows.Forms.MessageBoxIcon]::Information } else { [System.Windows.Forms.MessageBoxIcon]::Warning }
     $popupMsg = "多路塔机网络驱动器映射结果：`n`n" + ($results -join "`n") + "`n`n成功: $successCount  失败: $failCount"
     try {
-        [System.Windows.Forms.MessageBox]::Show($popupMsg, "映射网络驱动器 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, $icon)
+        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
+        [System.Windows.Forms.MessageBox]::Show($topForm, $popupMsg, "映射网络驱动器 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, $icon)
+        $topForm.Dispose()
     } catch {}
 }
 
@@ -835,12 +841,14 @@ $btnExit.Add_Click({ $form.Close() })
 $form.Add_FormClosing({
     param($sender, $e)
     if ($script:proc -and !$script:proc.HasExited) {
-        $result = [System.Windows.Forms.MessageBox]::Show(
+        $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
+        $result = [System.Windows.Forms.MessageBox]::Show($topForm,
             "当前还有任务正在运行。`n`n如果现在退出，正在运行的脚本会被停止。确定要退出吗？",
             "确认退出 --龙信硬件组",
             [System.Windows.Forms.MessageBoxButtons]::YesNo,
             [System.Windows.Forms.MessageBoxIcon]::Warning
         )
+        $topForm.Dispose()
         if ($result -ne [System.Windows.Forms.DialogResult]::Yes) {
             $e.Cancel = $true
             return

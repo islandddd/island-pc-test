@@ -129,9 +129,16 @@ function Test-Admin {
 function Remove-RegValue {
     param([string]$Path, [string]$Name)
     try {
-        if (Test-Path $Path) {
-            Remove-ItemProperty -Path $Path -Name $Name -Force -ErrorAction SilentlyContinue
-        }
+        $regPath = $Path -replace '^HKLM:', 'HKLM' -replace '^HKCU:', 'HKCU' -replace '^HKCR:', 'HKCR' -replace '^HKU:', 'HKU'
+        & reg delete "$regPath" /v "$Name" /f 2>&1 | Out-Null
+    } catch { }
+}
+
+function Remove-RegKey {
+    param([string]$Path)
+    try {
+        $regPath = $Path -replace '^HKLM:', 'HKLM' -replace '^HKCU:', 'HKCU' -replace '^HKCR:', 'HKCR' -replace '^HKU:', 'HKU'
+        & reg delete "$regPath" /f 2>&1 | Out-Null
     } catch { }
 }
 
@@ -226,9 +233,13 @@ Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
 Remove-RegValue -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP" -Name "LockScreenImagePath"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP" -Name "LockScreenImageUrl"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP" -Name "LockScreenImageStatus"
+# 删除可能空置的 Policy 键，消除"由组织管理"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
 
 # 移除 CloudContent 策略
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" -Name "DisableWindowsConsumerFeatures"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
 
 # 移除 HKCU 锁屏路径
 Remove-RegValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lock Screen" -Name "LockScreenImagePath"
@@ -284,6 +295,7 @@ try {
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "AUOptions"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoRebootWithLoggedOnUsers"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
 
 # 3.4 重新启用 Windows Update 计划任务
 $updateTasks = @(
@@ -406,6 +418,7 @@ Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "SmartScree
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "SmartScreenPuaEnabled"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "PreventSmartScreenPromptOverride"
 Remove-RegValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\AppHost" -Name "EnableWebContentEvaluation"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
 Write-Log "SmartScreen 已全面重新启用 (资源管理器 + Edge + 应用商店)" "Green"
 
 # 6.4b 恢复增强型钓鱼防护
@@ -413,6 +426,7 @@ Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\SmartS
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen" -Name "EnableEnhancedPhishingProtection"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen" -Name "ConfigureAppInstallControlEnabled"
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen" -Name "ConfigureAppInstallControl"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen"
 Remove-RegValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\WTDS\Settings" -Name "NotifyUnsafeApp"
 Remove-RegValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\WTDS\Settings" -Name "NotifyPasswordReuse"
 Remove-RegValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\WTDS\Settings" -Name "NotifyUnsafePasswordStorage"
@@ -481,6 +495,7 @@ Remove-RegValue -Path "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\NewsAndInt
 Remove-RegValue -Path "HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Feeds" -Name "EnableFeedsHeader"
 # Win11 小组件
 Remove-RegValue -Path "HKLM:\SOFTWARE\Policies\Microsoft\Dsh" -Name "AllowNewsAndInterests"
+Remove-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Dsh"
 Remove-RegValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa"
 
 # 恢复 Cortana
@@ -677,6 +692,11 @@ if ($canUninstall) {
         Write-Log "未检测到已安装的软件" "Yellow"
     }
 }
+
+# 刷新组策略，消除"由组织管理"状态
+Write-Log "正在刷新组策略..." "Cyan"
+gpupdate /force 2>&1 | Out-Null
+Write-Log "组策略已刷新" "Green"
 
 # ============================================================
 # 完成

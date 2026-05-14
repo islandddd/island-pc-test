@@ -326,6 +326,17 @@ if ($installers.Count -eq 0) {
                             }
                         }
                     }
+                    # MCR3512 自动导入注册表
+                    $mcrDir = Split-Path $installer.FullName -Parent
+                    if ($mcrDir -match '(?i)MCR3512|诺为|诺咪雅|控制键') {
+                        $regFile = Get-ChildItem -Path "$mcrDir\*" -Include "*.reg" -ErrorAction SilentlyContinue | Select-Object -First 1
+                        if ($regFile) {
+                            Write-Log "检测到 MCR3512，正在导入注册表: $($regFile.Name)" "Cyan"
+                            regedit.exe /s "$($regFile.FullName)"
+                            if ($LASTEXITCODE -eq 0) { Write-Log "MCR3512 注册表导入完成" "Green" }
+                            else { Write-Log "MCR3512 注册表导入失败" "Red" }
+                        }
+                    }
                     break
                 }
                 
@@ -342,7 +353,7 @@ if ($installers.Count -eq 0) {
             Write-Log "所有静默安装均未成功，启动普通安装，请手动点击下一步..." "Yellow"
             try {
                 Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
-                $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true
+                $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
                 [System.Windows.Forms.MessageBox]::Show($topForm, "软件: $($installer.Name)`n`n所有自动安装均未成功。`n安装程序会正常打开，请手动点击「下一步」完成安装。`n`n完成后点击「确定」继续。", "手动安装 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
                 $topForm.Dispose()
                 if ($installer.Extension -eq ".msi") {
@@ -366,6 +377,17 @@ if ($installers.Count -eq 0) {
                                 try { Rename-Item -Path $shortcut.FullName -NewName "案件数据专用刻录软件.lnk" -Force -ErrorAction Stop } catch {}
                                 break
                             }
+                        }
+                    }
+                    # MCR3512 自动导入注册表
+                    $mcrDir = Split-Path $installer.FullName -Parent
+                    if ($mcrDir -match '(?i)MCR3512|诺为|诺咪雅|控制键') {
+                        $regFile = Get-ChildItem -Path "$mcrDir\*" -Include "*.reg" -ErrorAction SilentlyContinue | Select-Object -First 1
+                        if ($regFile) {
+                            Write-Log "检测到 MCR3512，正在导入注册表: $($regFile.Name)" "Cyan"
+                            regedit.exe /s "$($regFile.FullName)"
+                            if ($LASTEXITCODE -eq 0) { Write-Log "MCR3512 注册表导入完成" "Green" }
+                            else { Write-Log "MCR3512 注册表导入失败" "Red" }
                         }
                     }
                 } else {
@@ -458,8 +480,7 @@ try {
             Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
             $hrWarnForm = New-Object System.Windows.Forms.Form
             $hrWarnForm.TopMost = $true
-            $hrWarnForm.Size = New-Object System.Drawing.Size(1, 1)
-            $hrWarnForm.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
+            $hrWarnForm.Show(); $hrWarnForm.Hide()
             [System.Windows.Forms.MessageBox]::Show($hrWarnForm, "未检测到火绒安全运行！`n`n请确认已安装火绒，或手动检查安全状态。", "安全警告 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
             $hrWarnForm.Dispose()
         } catch {}
