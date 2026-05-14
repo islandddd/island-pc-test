@@ -159,6 +159,52 @@ function Test-SoftwareInstalled {
     return $false
 }
 
+function Show-HiSuitePopup {
+    Add-Type -AssemblyName System.Windows.Forms, System.Drawing -ErrorAction Stop
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "手机助手安装完成 --龙信硬件组"
+    $form.Size = New-Object System.Drawing.Size(520, 280)
+    $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+    $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $form.MaximizeBox = $false
+    $form.MinimizeBox = $false
+    $form.TopMost = $true
+    $form.BackColor = [System.Drawing.Color]::White
+    $form.ShowInTaskbar = $false
+    $form.Show(); $form.Hide()
+
+    $title = New-Object System.Windows.Forms.Label
+    $title.Text = "⚠ 请关闭设备连接自动启动"
+    $title.Font = New-Object System.Drawing.Font("Microsoft YaHei", 18, [System.Drawing.FontStyle]::Bold)
+    $title.ForeColor = [System.Drawing.Color]::FromArgb(200, 40, 40)
+    $title.Size = New-Object System.Drawing.Size(480, 40)
+    $title.Location = New-Object System.Drawing.Point(20, 20)
+    $title.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+    $form.Controls.Add($title)
+
+    $body = New-Object System.Windows.Forms.Label
+    $body.Text = "华为/荣耀手机助手已安装成功`n`n请手动关闭设备连接自动启动：`n`n  1. 打开手机助手`n  2. 点击「设置」`n  3. 取消勾选「设备连接时自动启动」`n  4. 点击「确定」保存"
+    $body.Font = New-Object System.Drawing.Font("Microsoft YaHei", 11)
+    $body.Size = New-Object System.Drawing.Size(470, 150)
+    $body.Location = New-Object System.Drawing.Point(25, 70)
+    $form.Controls.Add($body)
+
+    $btn = New-Object System.Windows.Forms.Button
+    $btn.Text = "我知道了"
+    $btn.Font = New-Object System.Drawing.Font("Microsoft YaHei", 12, [System.Drawing.FontStyle]::Bold)
+    $btn.Size = New-Object System.Drawing.Size(160, 42)
+    $btn.Location = New-Object System.Drawing.Point(180, 190)
+    $btn.BackColor = [System.Drawing.Color]::FromArgb(30, 105, 190)
+    $btn.ForeColor = [System.Drawing.Color]::White
+    $btn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $btn.Add_Click({ $form.Close() })
+    $form.Controls.Add($btn)
+
+    $form.AcceptButton = $btn
+    $form.ShowDialog()
+    $form.Dispose()
+}
+
 #region Auto-elevate
 if (-not (Test-Admin)) {
     Write-Host "需要管理员权限，正在重新启动..." -ForegroundColor Yellow
@@ -338,6 +384,9 @@ if ($installers.Count -eq 0) {
                             else { Write-Log "MCR3512 注册表导入失败 (exit: $LASTEXITCODE)" "Red" }
                         }
                     }
+                    if ($installer.Name -match '(?i)HiSuite|HonorSuite') {
+                        Show-HiSuitePopup
+                    }
                     break
                 }
                 
@@ -392,6 +441,9 @@ if ($installers.Count -eq 0) {
                             if ($LASTEXITCODE -eq 0) { Write-Log "MCR3512 注册表导入完成" "Green" }
                             else { Write-Log "MCR3512 注册表导入失败 (exit: $LASTEXITCODE)" "Red" }
                         }
+                    }
+                    if ($installer.Name -match '(?i)HiSuite|HonorSuite') {
+                        Show-HiSuitePopup
                     }
                 } else {
                     $exitText = if ($proc) { $proc.ExitCode } else { "未启动" }
