@@ -4,7 +4,7 @@
 # 启动：双击 "运行_仅系统设置.bat"
 # ============================================================
 
-param([switch]$NoPause, [string]$LogPath)
+param([switch]$NoPause, [string]$LogPath, [switch]$SkipBlockerCheck)
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $scriptDir
@@ -151,6 +151,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 
 Write-LogHeader "system_setup.ps1" "仅系统设置"
 
+if (-not $SkipBlockerCheck) {
 # ============================================================
 # 0. OEM 安全软件检测（联想/戴尔/惠普/360/腾讯管家等）
 # ============================================================
@@ -233,6 +234,7 @@ if ($blockerFound.Count -gt 0) {
     }
 } else {
     Write-Log "未检测到第三方安全软件" "Green"
+}
 }
 
 # ============================================================

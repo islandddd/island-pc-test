@@ -297,7 +297,7 @@ function Write-CheckLine {
 }
 
 function Confirm-HuorongClosed {
-    if (-not (Get-Process -Name "HipsDaemon" -ErrorAction SilentlyContinue)) { return $true }
+    if (-not (Get-Process -Name "HipsDaemon" -ErrorAction SilentlyContinue)) { return "ok" }
 
     $msg = "检测到火绒正在运行，它会删除脚本文件导致工具无法正常工作。`n`n"
     $msg += "关闭步骤：`n"
@@ -316,13 +316,13 @@ function Confirm-HuorongClosed {
         return $false
     }
     if ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
-        Append-Output "[>>]  用户选择忽略火绒提示，继续执行" ([System.Drawing.Color]::FromArgb(230, 200, 50))
-        return $true
+        Append-Output "[>>]  用户选择忽略火绒提示（子脚本跳过安全检测）" ([System.Drawing.Color]::FromArgb(230, 200, 50))
+        return "skip"
     }
 
     if (-not (Get-Process -Name "HipsDaemon" -ErrorAction SilentlyContinue)) {
         Append-Output "[OK]  火绒已关闭，继续执行" ([System.Drawing.Color]::FromArgb(80, 220, 80))
-        return $true
+        return "ok"
     }
 
     $warnForm = New-Object System.Windows.Forms.Form
@@ -336,8 +336,8 @@ function Confirm-HuorongClosed {
         return $false
     }
 
-    Append-Output "[>>]  用户无视火绒警告，继续执行" ([System.Drawing.Color]::FromArgb(230, 200, 50))
-    return $true
+    Append-Output "[>>]  用户无视火绒警告（子脚本跳过安全检测）" ([System.Drawing.Color]::FromArgb(230, 200, 50))
+    return "skip"
 }
 
 function Start-Precheck {
@@ -773,17 +773,25 @@ function Start-NetworkMapping {
     } catch {}
 }
 
+function Get-HrExtraArgs {
+    $hrResult = Confirm-HuorongClosed
+    if ($hrResult -eq $false) { return $null }
+    if ($hrResult -eq "skip") { return "-SkipBlockerCheck" }
+    return ""
+}
+
 # ===== Button Events =====
 $btnSetup.Add_Click({
-    if (-not (Confirm-HuorongClosed)) { return }
-    Start-ScriptRun "system_setup.ps1" "仅系统设置"
+    $extra = Get-HrExtraArgs
+    if ($null -eq $extra) { return }
+    Start-ScriptRun "system_setup.ps1" "仅系统设置" $extra
 })
 $btnPrecheck.Add_Click({ Start-Precheck })
 $btnReport.Add_Click({ Export-IssueReport })
 
 $btnNetwork.Add_Click({
     if ($script:running) { return }
-    if (-not (Confirm-HuorongClosed)) { return }
+    if ($null -eq (Get-HrExtraArgs)) { return }
     Set-Running $true
     $outputBox.Clear()
     $statusLabel.Text = "正在映射网络驱动器，请稍等。"
@@ -797,7 +805,8 @@ $btnNetwork.Add_Click({
 
 $btnFull.Add_Click({
     if ($script:running) { return }
-    if (-not (Confirm-HuorongClosed)) { return }
+    $extra = Get-HrExtraArgs
+    if ($null -eq $extra) { return }
     $selected = Show-SoftwareSelection
     if ($null -eq $selected) {
         Append-Output "用户取消了软件安装" ([System.Drawing.Color]::Yellow)
@@ -805,17 +814,20 @@ $btnFull.Add_Click({
     }
     if ($selected.Count -eq 0) {
         Append-Output "未选择任何软件，将仅执行系统设置" ([System.Drawing.Color]::Yellow)
-        Start-ScriptRun "system_setup.ps1" "仅系统设置"
+        Start-ScriptRun "system_setup.ps1" "仅系统设置" $extra
     } else {
         $list = ($selected -join "|")
+        $fullArgs = "-InstallList `"$list`""
+        if ($extra) { $fullArgs = "$extra $fullArgs" }
         Append-Output "已选择 $($selected.Count) 个软件，开始完整安装..." ([System.Drawing.Color]::Cyan)
-        Start-ScriptRun "full_setup.ps1" "完整安装" "-InstallList `"$list`""
+        Start-ScriptRun "full_setup.ps1" "完整安装" $fullArgs
     }
 })
 
 $btnRestore.Add_Click({
-    if (-not (Confirm-HuorongClosed)) { return }
-    Start-ScriptRun "system_restore.ps1" "还原设置"
+    $extra = Get-HrExtraArgs
+    if ($null -eq $extra) { return }
+    Start-ScriptRun "system_restore.ps1" "还原设置" $extra
 })
 
 $btnExit.Add_Click({ $form.Close() })

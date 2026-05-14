@@ -4,7 +4,7 @@
 # 运行：右键此文件 -> "使用PowerShell运行" 或以管理员身份
 # ============================================================
 
-param([switch]$NoPause, [string]$InstallList, [string]$LogPath)
+param([switch]$NoPause, [string]$InstallList, [string]$LogPath, [switch]$SkipBlockerCheck)
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $scriptDir
@@ -201,7 +201,7 @@ Write-Step "第一阶段：系统设置"
 $systemSetupPath = Join-Path $scriptDir "system_setup.ps1"
 if (Test-Path $systemSetupPath) {
     Write-Log "正在调用系统设置脚本: system_setup.ps1" "Cyan"
-    & $systemSetupPath -NoPause -LogPath $logFile -ErrorAction Continue
+    & $systemSetupPath -NoPause -LogPath $logFile -SkipBlockerCheck:$SkipBlockerCheck -ErrorAction Continue
     Write-Log "系统设置脚本执行完毕" "Green"
 } else {
     Write-Log "警告: 未找到 system_setup.ps1，跳过系统设置部分" "Yellow"
