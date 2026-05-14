@@ -196,6 +196,7 @@ if ($blockerFound.Count -gt 0) {
             } else {
                 $popupMsg += "请先暂时退出这些软件后再继续。`n`n完成后点击「我已关闭防护」继续。"
             }
+            Write-Log "[注意] 即将弹出安全软件警告窗口，请在电脑上确认" "Red"
             $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
             $result = [System.Windows.Forms.MessageBox]::Show($topForm, $popupMsg, "安全软件警告 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Warning)
             $topForm.Dispose()
@@ -428,18 +429,6 @@ try {
     if ($battery) { $isLaptop = $true }
 } catch {}
 
-# 弹窗确认
-try {
-    Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
-    $msg = "是否将电源/睡眠按钮功能都设为【关机】？`n`n（选'是'→电源/睡眠按钮全设关机）`n（选'否'→不修改按钮，仅设置永不息屏）"
-    $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
-    $dlgResult = [System.Windows.Forms.MessageBox]::Show($topForm, $msg, "电源按钮设置 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Question)
-    $topForm.Dispose()
-    # 选"是"→要设关机(台式机行为), 选"否"→不修改(笔记本行为)
-    $isLaptop = ($dlgResult -eq [System.Windows.Forms.DialogResult]::No)
-} catch {
-    # 弹窗失败，使用自动检测结果
-}
 if ($isLaptop) {
     Write-Log "确认为笔记本 — 跳过合盖/电源按钮设置" "Cyan"
 } else {
@@ -723,6 +712,7 @@ if ($failedSettings.Count -gt 0) {
         if (-not $tamperOn) { $popupMsg += "`n  3. Windows 安全中心篡改防护未关" }
         if ($hrActive) { $popupMsg += "`n`n  ** 火绒安全已运行，部分设置可能由其接管 **" }
         $popupMsg += "`n`n选择: 是 = 继续执行，否 = 退出脚本"
+        Write-Log "[注意] 即将弹出安全验证窗口，请在电脑上确认" "Red"
         $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
         $result = [System.Windows.Forms.MessageBox]::Show($topForm, $popupMsg, "安全设置验证 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Warning)
         $topForm.Dispose()

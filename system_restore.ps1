@@ -594,6 +594,7 @@ if ($canUninstall) {
     
     if ($installedApps.Count -gt 0) {
         # 弹窗让用户勾选
+        Write-Log "[注意] 即将弹出卸载选择窗口，请在电脑上勾选要卸载的软件" "Red"
         $sf = New-Object System.Windows.Forms.Form
         $sf.Text = "选择要卸载的软件 --龙信硬件组"
         $sf.Size = New-Object System.Drawing.Size(550, 500)

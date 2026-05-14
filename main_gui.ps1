@@ -183,15 +183,6 @@ $statusPanel.Controls.Add($statusLabel)
 $statusPanel.Controls.Add($taskLabel)
 $statusPanel.Controls.Add($logPathLabel)
 
-$lblPopupHint = New-Object System.Windows.Forms.Label
-$lblPopupHint.Text = "⚠ 请注意电脑屏幕上的弹窗并确认"
-$lblPopupHint.Location = New-Object System.Drawing.Point([math]::Round(108 * $scale), [math]::Round(62 * $scale))
-$lblPopupHint.Size = New-Object System.Drawing.Size([math]::Round(600 * $scale), [math]::Round(10 * $scale))
-$lblPopupHint.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(9 * $scale), [System.Drawing.FontStyle]::Bold)
-$lblPopupHint.ForeColor = [System.Drawing.Color]::FromArgb(220, 40, 40)
-$lblPopupHint.Visible = $false
-$statusPanel.Controls.Add($lblPopupHint)
-
 # ===== 操作区域 =====
 $actionPanel = New-Object System.Windows.Forms.Panel
 $actionPanel.Location = New-Object System.Drawing.Point([math]::Round(18 * $scale), [math]::Round(194 * $scale))
@@ -278,7 +269,6 @@ function Set-Running($run) {
     $script:running = $run
     foreach ($btn in $script:allButtons) { $btn.Enabled = -not $run }
     $progress.Visible = $run
-    $lblPopupHint.Visible = $run
     if ($run) {
         $statusPill.Text = "运行中"
         $statusPill.BackColor = [System.Drawing.Color]::FromArgb(30, 105, 190)
@@ -316,6 +306,7 @@ function Confirm-HuorongClosed {
     $msg += "  3. 系统防护 → 注册表防护 → 暂时关闭`n"
     $msg += "  4. 点击确认保存`n`n"
     $msg += "完成后点击「我已关闭」。`n如不了解怎么操作可点「忽略继续」。"
+    Append-Output "[注意] 即将弹出火绒安全弹窗，请在电脑上确认" ([System.Drawing.Color]::FromArgb(220, 40, 40))
     $topForm = New-Object System.Windows.Forms.Form
     $topForm.TopMost = $true
     $topForm.Show(); $topForm.Hide()
@@ -338,6 +329,7 @@ function Confirm-HuorongClosed {
 
     $warnForm = New-Object System.Windows.Forms.Form
     $warnForm.TopMost = $true
+    Append-Output "[注意] 火绒仍未关闭，即将再次弹窗确认" ([System.Drawing.Color]::FromArgb(220, 40, 40))
     $warnForm.Show(); $warnForm.Hide()
     $warnMsg = "仍检测到火绒在运行。`n`n点击「是」继续（忽视火绒），点击「否」退出。"
     $warnResult = [System.Windows.Forms.MessageBox]::Show($warnForm, $warnMsg, "火绒仍在运行 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Exclamation)

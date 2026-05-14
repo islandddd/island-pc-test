@@ -272,6 +272,12 @@ if ($installers.Count -eq 0) {
         $methodIndex = 0
         $totalMethods = $methods.Count
         
+        # 龙信手机驱动跳过所有静默尝试，直接弹手动安装
+        if ($installer.Name -match '龙信手机驱动') {
+            Write-Log "检测到龙信手机驱动，直接启动手动安装" "Cyan"
+            $totalMethods = 0
+        }
+        
         while ($methodIndex -lt $totalMethods -and -not $installed) {
             $method = $methods[$methodIndex]
             $methodIndex++
@@ -327,9 +333,9 @@ if ($installers.Count -eq 0) {
                         $regFile = Get-ChildItem -Path "$mcrDir\*" -Include "*.reg" -ErrorAction SilentlyContinue | Select-Object -First 1
                         if ($regFile) {
                             Write-Log "检测到 MCR3512，正在导入注册表: $($regFile.Name)" "Cyan"
-                            regedit.exe /s "$($regFile.FullName)"
+                            & reg import "$($regFile.FullName)" 2>&1 | Out-Null
                             if ($LASTEXITCODE -eq 0) { Write-Log "MCR3512 注册表导入完成" "Green" }
-                            else { Write-Log "MCR3512 注册表导入失败" "Red" }
+                            else { Write-Log "MCR3512 注册表导入失败 (exit: $LASTEXITCODE)" "Red" }
                         }
                     }
                     break
@@ -348,6 +354,7 @@ if ($installers.Count -eq 0) {
             Write-Log "所有静默安装均未成功，启动普通安装，请手动点击下一步..." "Yellow"
             try {
                 Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+                Write-Log "[注意] 即将弹出手动安装窗口，请按照提示操作" "Red"
                 $topForm = New-Object System.Windows.Forms.Form; $topForm.TopMost = $true; $topForm.Show(); $topForm.Hide()
                 [System.Windows.Forms.MessageBox]::Show($topForm, "软件: $($installer.Name)`n`n所有自动安装均未成功。`n安装程序会正常打开，请手动点击「下一步」完成安装。`n`n完成后点击「确定」继续。", "手动安装 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
                 $topForm.Dispose()
@@ -381,9 +388,9 @@ if ($installers.Count -eq 0) {
                         $regFile = Get-ChildItem -Path "$mcrDir\*" -Include "*.reg" -ErrorAction SilentlyContinue | Select-Object -First 1
                         if ($regFile) {
                             Write-Log "检测到 MCR3512，正在导入注册表: $($regFile.Name)" "Cyan"
-                            regedit.exe /s "$($regFile.FullName)"
+                            & reg import "$($regFile.FullName)" 2>&1 | Out-Null
                             if ($LASTEXITCODE -eq 0) { Write-Log "MCR3512 注册表导入完成" "Green" }
-                            else { Write-Log "MCR3512 注册表导入失败" "Red" }
+                            else { Write-Log "MCR3512 注册表导入失败 (exit: $LASTEXITCODE)" "Red" }
                         }
                     }
                 } else {
