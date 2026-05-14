@@ -299,34 +299,45 @@ function Write-CheckLine {
 function Confirm-HuorongClosed {
     if (-not (Get-Process -Name "HipsDaemon" -ErrorAction SilentlyContinue)) { return $true }
 
-    while ($true) {
-        $msg = "检测到火绒正在运行，它会删除脚本文件导致工具无法正常工作。`n`n"
-        $msg += "请右键任务栏右下角火绒图标 → 退出火绒`n`n"
-        $msg += "完成后点击「已退出」继续。"
-        $topForm = New-Object System.Windows.Forms.Form
-        $topForm.TopMost = $true
-        $result = [System.Windows.Forms.MessageBox]::Show($topForm, $msg, "火绒安全提示 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Warning)
-        $topForm.Dispose()
+    $msg = "检测到火绒正在运行，它会删除脚本文件导致工具无法正常工作。`n`n"
+    $msg += "关闭步骤：`n"
+    $msg += "  1. 右键任务栏右下角火绒图标 → 安全设置`n"
+    $msg += "  2. 系统防护 → 文件实时监控 → 暂时关闭`n"
+    $msg += "  3. 系统防护 → 注册表防护 → 暂时关闭`n"
+    $msg += "  4. 点击确认保存`n`n"
+    $msg += "完成后点击「我已关闭」。`n如不了解怎么操作可点「忽略继续」。"
+    $topForm = New-Object System.Windows.Forms.Form
+    $topForm.TopMost = $true
+    $result = [System.Windows.Forms.MessageBox]::Show($topForm, $msg, "火绒安全提示 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNoCancel, [System.Windows.Forms.MessageBoxIcon]::Warning)
+    $topForm.Dispose()
 
-        if ($result -eq [System.Windows.Forms.DialogResult]::No) {
-            Append-Output "[!!]  用户因火绒未关闭而退出操作" ([System.Drawing.Color]::FromArgb(255, 100, 100))
-            return $false
-        }
-
-        if (-not (Get-Process -Name "HipsDaemon" -ErrorAction SilentlyContinue)) {
-            Append-Output "[OK]  火绒已退出，继续执行" ([System.Drawing.Color]::FromArgb(80, 220, 80))
-            return $true
-        }
-
-        $retryForm = New-Object System.Windows.Forms.Form
-        $retryForm.TopMost = $true
-        $retryResult = [System.Windows.Forms.MessageBox]::Show($retryForm, "火绒仍在运行，请右键图标→退出火绒后再试。", "火绒仍在运行 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::RetryCancel, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
-        $retryForm.Dispose()
-        if ($retryResult -eq [System.Windows.Forms.DialogResult]::Cancel) {
-            Append-Output "[!!]  用户因火绒未关闭而退出操作" ([System.Drawing.Color]::FromArgb(255, 100, 100))
-            return $false
-        }
+    if ($result -eq [System.Windows.Forms.DialogResult]::No) {
+        Append-Output "[!!]  用户因火绒未关闭而退出操作" ([System.Drawing.Color]::FromArgb(255, 100, 100))
+        return $false
     }
+    if ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
+        Append-Output "[>>]  用户选择忽略火绒提示，继续执行" ([System.Drawing.Color]::FromArgb(230, 200, 50))
+        return $true
+    }
+
+    if (-not (Get-Process -Name "HipsDaemon" -ErrorAction SilentlyContinue)) {
+        Append-Output "[OK]  火绒已关闭，继续执行" ([System.Drawing.Color]::FromArgb(80, 220, 80))
+        return $true
+    }
+
+    $warnForm = New-Object System.Windows.Forms.Form
+    $warnForm.TopMost = $true
+    $warnMsg = "仍检测到火绒在运行。`n`n点「继续」直接运行（火绒可能拦截部分操作），点「退出」取消。"
+    $warnResult = [System.Windows.Forms.MessageBox]::Show($warnForm, $warnMsg, "火绒仍在运行 --龙信硬件组", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+    $warnForm.Dispose()
+
+    if ($warnResult -eq [System.Windows.Forms.DialogResult]::No) {
+        Append-Output "[!!]  用户选择退出" ([System.Drawing.Color]::FromArgb(255, 100, 100))
+        return $false
+    }
+
+    Append-Output "[>>]  用户无视火绒警告，继续执行" ([System.Drawing.Color]::FromArgb(230, 200, 50))
+    return $true
 }
 
 function Start-Precheck {
