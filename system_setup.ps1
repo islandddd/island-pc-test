@@ -1,5 +1,5 @@
 ﻿# ============================================================
-# 电脑出厂调试 - 系统设置脚本 v2.1
+# 电脑出厂调试 - 系统设置脚本 v2.1.1
 # 功能：壁纸、锁屏、电源管理、关闭更新、安全设置等
 # 启动：双击 "运行_仅系统设置.bat"
 # ============================================================
@@ -145,7 +145,7 @@ if (-not (Test-Admin)) {
 $host.UI.RawUI.WindowTitle = "系统调试脚本"
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  电脑出厂调试 - 系统设置脚本 v2.1" -ForegroundColor Cyan
+Write-Host "  电脑出厂调试 - 系统设置脚本 v2.1.1" -ForegroundColor Cyan
 Write-Host "  时间: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 

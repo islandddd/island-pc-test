@@ -1,5 +1,5 @@
 ﻿# ============================================================
-# 电脑出厂调试 - 统一 GUI 工具 v2.1  --龙信硬件组
+# 电脑出厂调试 - 统一 GUI 工具 v2.1.1  --龙信硬件组
 # 启动：双击 "运行_GUI工具.bat"
 # ============================================================
 
@@ -112,7 +112,7 @@ function New-ActionCard {
 
 # ===== 主窗口 =====
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "电脑出厂调试工具 v2.1  --龙信硬件组"
+$form.Text = "电脑出厂调试工具 v2.1.1  --龙信硬件组"
 $form.Size = New-Object System.Drawing.Size([math]::Round(920 * $scale), [math]::Round(720 * $scale))
 $form.MinimumSize = New-Object System.Drawing.Size([math]::Round(940 * $scale), [math]::Round(660 * $scale))
 $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
@@ -144,7 +144,7 @@ $headerSubtitle.ForeColor = [System.Drawing.Color]::FromArgb(198, 222, 246)
 $headerPanel.Controls.Add($headerSubtitle)
 
 $headerBrand = New-Object System.Windows.Forms.Label
-$headerBrand.Text = "龙信硬件组  v2.1"
+$headerBrand.Text = "龙信硬件组  v2.1.1"
 $headerBrand.Location = New-Object System.Drawing.Point([math]::Round(690 * $scale), [math]::Round(30 * $scale))
 $headerBrand.Size = New-Object System.Drawing.Size([math]::Round(190 * $scale), [math]::Round(28 * $scale))
 $headerBrand.Font = New-Object System.Drawing.Font("Microsoft YaHei", [math]::Round(10 * $scale), [System.Drawing.FontStyle]::Bold)
@@ -863,7 +863,7 @@ $form.Add_FormClosing({
 })
 
 # ===== Welcome =====
-Append-Output "电脑出厂调试工具 v2.1  --龙信硬件组" ([System.Drawing.Color]::Cyan)
+Append-Output "电脑出厂调试工具 v2.1.1  --龙信硬件组" ([System.Drawing.Color]::Cyan)
 Append-Output "" ([System.Drawing.Color]::Gray)
 Append-Output "  仅系统设置：壁纸、锁屏、更新、电源、安全、任务栏" ([System.Drawing.Color]::FromArgb(180,180,180))
 Append-Output "  完整安装：系统设置 + software 文件夹内勾选的软件" ([System.Drawing.Color]::FromArgb(180,180,180))
